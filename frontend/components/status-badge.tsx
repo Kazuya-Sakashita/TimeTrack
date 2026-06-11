@@ -1,4 +1,4 @@
-import type { Attendance } from "@/lib/api";
+import type { Attendance, ChangeRequestStatus } from "@/lib/api";
 
 const styles: Record<Attendance["status"], string> = {
   working: "bg-primary/10 text-primary",
@@ -25,6 +25,28 @@ export function AttendanceStatusBadge({
         <span className="mr-1 inline-block size-1.5 animate-pulse rounded-full bg-primary" />
       )}
       {labels[status]}
+    </span>
+  );
+}
+
+const requestStyles: Record<ChangeRequestStatus, string> = {
+  pending: "bg-warning/15 text-warning-foreground",
+  approved: "bg-success/15 text-success",
+  rejected: "bg-destructive/10 text-destructive",
+};
+
+const requestLabels: Record<ChangeRequestStatus, string> = {
+  pending: "申請中",
+  approved: "承認",
+  rejected: "却下",
+};
+
+export function RequestStatusBadge({ status }: { status: ChangeRequestStatus }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${requestStyles[status]}`}
+    >
+      {requestLabels[status]}
     </span>
   );
 }

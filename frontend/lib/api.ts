@@ -132,6 +132,57 @@ export function breakEnd(
   );
 }
 
+// ---- 修正申請 -----------------------------------------------------------
+
+export type ChangeRequestStatus = "pending" | "approved" | "rejected";
+
+export type AttendanceChangeRequest = {
+  id: string;
+  attendanceId: string;
+  applicantName: string;
+  proposedClockInAt: string | null;
+  proposedClockOutAt: string | null;
+  reason: string;
+  status: ChangeRequestStatus;
+  reviewComment: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+};
+
+export async function fetchChangeRequests(
+  token: string,
+): Promise<AttendanceChangeRequest[]> {
+  const res = await fetch(`${BASE}/attendance_change_requests`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("申請の取得に失敗しました");
+  return res.json();
+}
+
+export async function createChangeRequest(
+  token: string,
+  body: {
+    attendanceId: string;
+    proposedClockInAt?: string | null;
+    proposedClockOutAt?: string | null;
+    reason: string;
+  },
+): Promise<AttendanceChangeRequest> {
+  const res = await fetch(`${BASE}/attendance_change_requests`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "申請に失敗しました");
+  }
+  return res.json();
+}
+
 export async function logout(token: string): Promise<void> {
   await fetch(`${BASE}/auth/logout`, {
     method: "DELETE",

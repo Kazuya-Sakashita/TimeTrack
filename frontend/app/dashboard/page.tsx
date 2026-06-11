@@ -3,7 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Clock3, Coffee, LogIn, LogOut, Play } from "lucide-react";
+import {
+  CalendarClock,
+  Clock3,
+  Coffee,
+  FileText,
+  LogIn,
+  LogOut,
+  Play,
+} from "lucide-react";
 import {
   type ApiUser,
   type Attendance,
@@ -193,13 +201,22 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <Link
-        href="/history"
-        className="flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent"
-      >
-        <CalendarClock className="size-4 text-muted-foreground" />
-        勤怠履歴を見る
-      </Link>
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/history"
+          className="flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent"
+        >
+          <CalendarClock className="size-4 text-muted-foreground" />
+          勤怠履歴
+        </Link>
+        <Link
+          href="/requests"
+          className="flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent"
+        >
+          <FileText className="size-4 text-muted-foreground" />
+          修正申請
+        </Link>
+      </div>
     </main>
   );
 }
