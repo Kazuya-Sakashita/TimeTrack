@@ -18,6 +18,10 @@ servers:
 tags:
   - name: System
     description: ヘルスチェック等
+  - name: Auth
+    description: 認証（ログイン・ログアウト）
+  - name: Me
+    description: ログイン中ユーザー
 
 paths:
   /health:
@@ -36,6 +40,73 @@ paths:
               example:
                 status: ok
                 db: ok
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: ログイン
+      description: email / password で認証し、JWT を発行する。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "201":
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthToken"
+        "401":
+          description: 認証失敗（email/password 不一致）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: バリデーションエラー（必須項目欠落など）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/logout:
+    delete:
+      tags: [Auth]
+      summary: ログアウト
+      description: |
+        ステートレス JWT のため、クライアントは保持トークンを破棄する。
+        サーバは 204 を返す（将来、jti denylist による即時失効を追加可能）。
+      responses:
+        "204":
+          description: ログアウト完了
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /me:
+    get:
+      tags: [Me]
+      summary: ログイン中ユーザーの取得
+      responses:
+        "200":
+          description: 正常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   securitySchemes:
@@ -56,6 +127,49 @@ components:
           type: string
           enum: [ok, error]
           example: ok
+
+    User:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id:
+          type: string
+          description: 外部公開 ID（内部連番ではない）
+          example: usr_a1B2c3D4e5F6
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        name:
+          type: string
+          example: 管理 太郎
+        role:
+          type: string
+          enum: [employee, manager, admin]
+          example: admin
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        password:
+          type: string
+          format: password
+          example: password
+
+    AuthToken:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+          description: JWT。以降のリクエストは Authorization: Bearer <token> で送る
+        user:
+          $ref: "#/components/schemas/User"
 
     Error:
       type: object

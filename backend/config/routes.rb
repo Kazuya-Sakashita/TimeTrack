@@ -8,6 +8,13 @@ Rails.application.routes.draw do
   # アプリ + DB の疎通確認（Walking Skeleton）
   get "health" => "health#show"
 
+  # 認証
+  post "auth/login" => "auth/sessions#create"
+  delete "auth/logout" => "auth/sessions#destroy"
+
+  # ログイン中ユーザー
+  get "me" => "me#show"
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
