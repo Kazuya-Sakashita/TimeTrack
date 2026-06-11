@@ -2,11 +2,13 @@ import type { Attendance } from "@/lib/api";
 
 const styles: Record<Attendance["status"], string> = {
   working: "bg-primary/10 text-primary",
+  on_break: "bg-warning/15 text-warning-foreground",
   finished: "bg-muted text-muted-foreground",
 };
 
 const labels: Record<Attendance["status"], string> = {
   working: "勤務中",
+  on_break: "休憩中",
   finished: "退勤済",
 };
 

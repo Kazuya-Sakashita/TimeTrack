@@ -39,7 +39,8 @@ export type Attendance = {
   clockInAt: string | null;
   clockOutAt: string | null;
   workMinutes: number | null;
-  status: "working" | "finished";
+  breakMinutes: number;
+  status: "working" | "on_break" | "finished";
 };
 
 export type Pagination = {
@@ -89,6 +90,30 @@ export async function clockOut(token: string): Promise<Attendance> {
     throw new Error(data?.error?.message ?? "退勤打刻に失敗しました");
   }
   return res.json();
+}
+
+async function postAttendanceAction(
+  token: string,
+  path: string,
+  fallbackMessage: string,
+): Promise<Attendance> {
+  const res = await fetch(`${BASE}/attendances/${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? fallbackMessage);
+  }
+  return res.json();
+}
+
+export function breakStart(token: string): Promise<Attendance> {
+  return postAttendanceAction(token, "break-start", "休憩開始に失敗しました");
+}
+
+export function breakEnd(token: string): Promise<Attendance> {
+  return postAttendanceAction(token, "break-end", "休憩終了に失敗しました");
 }
 
 export async function logout(token: string): Promise<void> {
