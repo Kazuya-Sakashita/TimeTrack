@@ -15,12 +15,10 @@ Rails.application.routes.draw do
   # ログイン中ユーザー
   get "me" => "me#show"
 
-  # 勤怠
-  get "attendances" => "attendances#index"
-  post "attendances/clock-in" => "attendances#clock_in"
-  post "attendances/clock-out" => "attendances#clock_out"
-  post "attendances/break-start" => "attendances#break_start"
-  post "attendances/break-end" => "attendances#break_end"
+  # 勤怠（リソース中心。出勤=create / 退勤=update / 休憩=breaks サブリソース）
+  resources :attendances, only: %i[index show create update] do
+    resources :breaks, only: %i[create update]
+  end
 
   # Defines the root path route ("/")
   # root "posts#index"

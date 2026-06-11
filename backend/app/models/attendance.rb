@@ -13,6 +13,48 @@ class Attendance < ApplicationRecord
                         uniqueness: { scope: :user_id, message: "は既に打刻済みです" }
   validates :clock_in_at, presence: true
 
+  # 不正な状態遷移を表すドメインエラー（Controller で 422 にマップ）
+  class InvalidTransition < StandardError
+    attr_reader :code
+
+    def initialize(code, message)
+      @code = code
+      super(message)
+    end
+  end
+
+  # 退勤（状態変更）
+  def clock_out!
+    raise InvalidTransition.new("already_clocked_out", "本日は既に退勤打刻済みです") if finished?
+    raise InvalidTransition.new("on_break", "休憩を終了してから退勤してください") if on_break?
+
+    update!(clock_out_at: Time.current, status: :finished)
+  end
+
+  # 休憩開始（breaks サブリソースの作成）
+  def start_break!
+    raise InvalidTransition.new("already_clocked_out", "本日は既に退勤打刻済みです") if finished?
+    raise InvalidTransition.new("already_on_break", "既に休憩中です") if on_break?
+
+    attendance_breaks.create!(started_at: Time.current).tap do
+      update!(status: :on_break)
+    end
+  end
+
+  # 休憩終了（breaks サブリソースの更新）
+  def finish_break!(attendance_break)
+    raise InvalidTransition.new("not_on_break", "休憩中ではありません") if attendance_break.ended_at.present?
+
+    attendance_break.update!(ended_at: Time.current)
+    update!(status: :working)
+    attendance_break
+  end
+
+  # 進行中（未終了）の休憩
+  def open_break
+    attendance_breaks.open.first
+  end
+
   # 休憩時間の合計（分）。終了済みの休憩のみ集計する。
   def break_minutes
     attendance_breaks.filter_map(&:minutes).sum

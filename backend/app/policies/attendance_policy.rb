@@ -6,6 +6,11 @@ class AttendancePolicy < ApplicationPolicy
     end
   end
 
+  # 自分の勤怠のみ閲覧できる
+  def show?
+    own?
+  end
+
   # 自分の打刻のみ作成できる
   def create?
     own?
