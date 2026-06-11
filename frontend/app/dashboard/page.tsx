@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Clock3, LogIn, LogOut } from "lucide-react";
+import { CalendarClock, Clock3, Coffee, LogIn, LogOut, Play } from "lucide-react";
 import {
   type ApiUser,
   type Attendance,
+  breakEnd,
+  breakStart,
   clockIn,
   clockOut,
   fetchMe,
@@ -44,29 +46,15 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  async function handleClockIn() {
+  async function runAction(action: (token: string) => Promise<Attendance>) {
     const token = tokenStore.get();
     if (!token) return;
     setClocking(true);
     setClockError(null);
     try {
-      setAttendance(await clockIn(token));
+      setAttendance(await action(token));
     } catch (err) {
-      setClockError(err instanceof Error ? err.message : "出勤打刻に失敗しました");
-    } finally {
-      setClocking(false);
-    }
-  }
-
-  async function handleClockOut() {
-    const token = tokenStore.get();
-    if (!token) return;
-    setClocking(true);
-    setClockError(null);
-    try {
-      setAttendance(await clockOut(token));
-    } catch (err) {
-      setClockError(err instanceof Error ? err.message : "退勤打刻に失敗しました");
+      setClockError(err instanceof Error ? err.message : "打刻に失敗しました");
     } finally {
       setClocking(false);
     }
@@ -119,49 +107,82 @@ export default function DashboardPage() {
         </dl>
       </div>
 
-      {/* 打刻（clock-widget の出勤・退勤部分。休憩は後続スライス） */}
+      {/* 打刻（clock-widget: 出勤・退勤・休憩） */}
       <div className="rounded-lg border bg-card p-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">本日の勤怠</p>
-            <p className="mt-1 flex items-center gap-2">
-              <span
-                className={`inline-block size-2 rounded-full ${
-                  attendance?.status === "working"
-                    ? "bg-success"
+        <div>
+          <p className="text-sm text-muted-foreground">本日の勤怠</p>
+          <p className="mt-1 flex items-center gap-2">
+            <span
+              className={`inline-block size-2 rounded-full ${
+                attendance?.status === "working"
+                  ? "bg-success animate-pulse"
+                  : attendance?.status === "on_break"
+                    ? "bg-warning animate-pulse"
                     : "bg-muted-foreground/40"
-                }`}
-              />
-              <span className="font-medium">
-                {attendance?.status === "working" &&
-                  `勤務中 · ${formatTime(attendance.clockInAt)} 出勤`}
-                {attendance?.status === "finished" &&
-                  `退勤済 · 勤務 ${formatMinutes(attendance.workMinutes)}`}
-                {!attendance && "未出勤"}
-              </span>
-            </p>
-          </div>
+              }`}
+            />
+            <span className="font-medium">
+              {attendance?.status === "working" &&
+                `勤務中 · ${formatTime(attendance.clockInAt)} 出勤`}
+              {attendance?.status === "on_break" && "休憩中"}
+              {attendance?.status === "finished" &&
+                `退勤済 · 勤務 ${formatMinutes(attendance.workMinutes)}`}
+              {!attendance && "未出勤"}
+            </span>
+          </p>
+        </div>
 
-          {attendance?.status === "working" ? (
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {!attendance && (
             <button
-              onClick={handleClockOut}
+              onClick={() => runAction(clockIn)}
               disabled={clocking}
-              className="flex h-12 items-center gap-2 rounded-md bg-destructive px-5 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-60"
-            >
-              <LogOut className="size-4" />
-              {clocking ? "打刻中..." : "退勤"}
-            </button>
-          ) : (
-            <button
-              onClick={handleClockIn}
-              disabled={clocking || attendance?.status === "finished"}
-              className="flex h-12 items-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >
               <LogIn className="size-4" />
-              {clocking ? "打刻中..." : "出勤"}
+              出勤
             </button>
           )}
+
+          {attendance?.status === "working" && (
+            <>
+              <button
+                onClick={() => runAction(clockOut)}
+                disabled={clocking}
+                className="flex h-12 items-center justify-center gap-2 rounded-md bg-destructive text-sm font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
+              >
+                <LogOut className="size-4" />
+                退勤
+              </button>
+              <button
+                onClick={() => runAction(breakStart)}
+                disabled={clocking}
+                className="flex h-12 items-center justify-center gap-2 rounded-md border border-input text-sm font-medium hover:bg-accent disabled:opacity-60"
+              >
+                <Coffee className="size-4" />
+                休憩開始
+              </button>
+            </>
+          )}
+
+          {attendance?.status === "on_break" && (
+            <button
+              onClick={() => runAction(breakEnd)}
+              disabled={clocking}
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              <Play className="size-4" />
+              休憩終了
+            </button>
+          )}
+
+          {attendance?.status === "finished" && (
+            <p className="col-span-2 text-center text-sm text-muted-foreground">
+              本日は退勤済みです（休憩 {formatMinutes(attendance.breakMinutes)}）
+            </p>
+          )}
         </div>
+
         {clockError && (
           <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {clockError}
