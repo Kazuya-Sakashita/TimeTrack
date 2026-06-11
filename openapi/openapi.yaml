@@ -1,0 +1,80 @@
+openapi: 3.0.3
+info:
+  title: TimeTrack API
+  version: 0.1.0
+  description: |
+    TimeTrack（勤怠管理システム）の API 仕様。
+    この OpenAPI を唯一の仕様書とし、実装より先に契約を確定する（API 駆動開発）。
+
+    規約:
+    - リソース ID は内部連番ではなく public_id を使う（例: usr_xxx）。
+    - 認証は JWT (Bearer)。認可は Pundit（バックエンド側）。
+    - エラーは共通の Error スキーマで返す。
+
+servers:
+  - url: http://localhost:3000
+    description: ローカル開発（docker compose）
+
+tags:
+  - name: System
+    description: ヘルスチェック等
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: ヘルスチェック
+      description: アプリと DB の疎通を確認する（Walking Skeleton）。
+      security: []
+      responses:
+        "200":
+          description: 正常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              example:
+                status: ok
+                db: ok
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status, db]
+      properties:
+        status:
+          type: string
+          example: ok
+        db:
+          type: string
+          enum: [ok, error]
+          example: ok
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: 機械可読なエラーコード
+              example: unauthorized
+            message:
+              type: string
+              description: 人間可読なエラーメッセージ
+              example: 認証が必要です
+
+# デフォルトで全エンドポイントに JWT を要求し、公開エンドポイントは
+# 各 path で security: [] により上書きする。
+security:
+  - bearerAuth: []
