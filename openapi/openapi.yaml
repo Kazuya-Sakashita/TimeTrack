@@ -22,6 +22,8 @@ tags:
     description: 認証（ログイン・ログアウト）
   - name: Me
     description: ログイン中ユーザー
+  - name: Attendance
+    description: 勤怠打刻
 
 paths:
   /health:
@@ -90,6 +92,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /attendances/clock-in:
+    post:
+      tags: [Attendance]
+      summary: 出勤打刻
+      description: ログイン中ユーザーの本日の出勤を記録する（1日1回）。
+      responses:
+        "201":
+          description: 出勤打刻成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attendance"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: 既に本日出勤済み
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /me:
     get:
       tags: [Me]
@@ -147,6 +174,31 @@ components:
           type: string
           enum: [employee, manager, admin]
           example: admin
+
+    Attendance:
+      type: object
+      required: [id, workDate, status]
+      properties:
+        id:
+          type: string
+          description: 外部公開 ID
+          example: att_a1B2c3D4e5F6
+        workDate:
+          type: string
+          format: date
+          example: "2026-06-11"
+        clockInAt:
+          type: string
+          format: date-time
+          nullable: true
+        clockOutAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [working, finished]
+          example: working
 
     LoginRequest:
       type: object
