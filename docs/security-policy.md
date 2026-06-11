@@ -44,3 +44,17 @@
 | 認可なし | 403 |
 | リソースなし | 404 |
 | バリデーション失敗 | 422 |
+
+## 機密情報の取り扱いと自動防御
+
+- 秘密情報は `.env`（git 管理外）で管理し、サンプルは `.env.example` に置く。
+- `.gitignore` はルートに集約（単一の管理元）。鍵・証明書・DB データ・ビルド成果物を除外。
+- Rails の `master.key` は commit しない。本プロジェクトは encrypted credentials を使わず
+  ENV ベースで秘密を管理するため `credentials.yml.enc` も追跡しない。
+- **二段の自動検査で誤 push を防ぐ:**
+  - **pre-commit フック**（`.githooks/pre-commit`）: コミット前に gitleaks でステージ差分を検査。
+    - 有効化: `git config core.hooksPath .githooks`
+    - 導入: `brew install gitleaks`
+  - **CI**（`.github/workflows/security.yml`）: push / PR で gitleaks が履歴を走査。
+- 万一 commit 済みになった場合: `git rm --cached <path>` で追跡解除し、
+  **漏洩した実鍵は必ずローテーション**する（履歴削除だけでは無効化されない）。

@@ -1,0 +1,21 @@
+name: security
+
+# 機密情報が誤って push されていないかを CI で検査する（security-policy.md）。
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  gitleaks:
+    name: gitleaks (secret scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 履歴全体を走査するため全コミットを取得
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

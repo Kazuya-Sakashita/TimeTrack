@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# 機密情報の誤コミットを push 前に止める pre-commit フック。
+# 有効化: git config core.hooksPath .githooks
+#
+# gitleaks が未インストールでもコミットは止めず警告のみ（CI 側でも再検査する）。
+set -euo pipefail
+
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-commit] gitleaks: ステージ済み変更を検査中..."
+  if ! gitleaks protect --staged --redact --no-banner; then
+    echo "[pre-commit] ❌ 機密情報の可能性を検出しました。コミットを中止します。"
+    echo "             誤検出の場合は .gitleaks.toml で allowlist を設定してください。"
+    exit 1
+  fi
+  echo "[pre-commit] ✅ gitleaks: 問題なし"
+else
+  echo "[pre-commit] ⚠ gitleaks 未インストールのためスキップ（CI で検査されます）。"
+  echo "             導入: brew install gitleaks"
+fi
