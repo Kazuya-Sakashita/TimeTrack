@@ -8,6 +8,7 @@ class AttendanceSerializer
       clockOutAt: attendance.clock_out_at&.iso8601,
       workMinutes: attendance.worked_minutes,
       breakMinutes: attendance.break_minutes,
+      openBreakId: attendance.open_break&.public_id,
       status: attendance.status,
     }
   end

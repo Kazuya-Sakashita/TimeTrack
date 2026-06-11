@@ -147,7 +147,7 @@ export default function DashboardPage() {
           {attendance?.status === "working" && (
             <>
               <button
-                onClick={() => runAction(clockOut)}
+                onClick={() => runAction((t) => clockOut(t, attendance.id))}
                 disabled={clocking}
                 className="flex h-12 items-center justify-center gap-2 rounded-md bg-destructive text-sm font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
               >
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                 退勤
               </button>
               <button
-                onClick={() => runAction(breakStart)}
+                onClick={() => runAction((t) => breakStart(t, attendance.id))}
                 disabled={clocking}
                 className="flex h-12 items-center justify-center gap-2 rounded-md border border-input text-sm font-medium hover:bg-accent disabled:opacity-60"
               >
@@ -167,7 +167,10 @@ export default function DashboardPage() {
 
           {attendance?.status === "on_break" && (
             <button
-              onClick={() => runAction(breakEnd)}
+              onClick={() =>
+                attendance.openBreakId &&
+                runAction((t) => breakEnd(t, attendance.id, attendance.openBreakId!))
+              }
               disabled={clocking}
               className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >

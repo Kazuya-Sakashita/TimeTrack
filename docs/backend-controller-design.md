@@ -98,10 +98,18 @@ resources :monthly_reports, only: %i[index show update]
 - [ ] URL / レスポンスが public_id か
 - [ ] OpenAPI・README・docs が実装と同期しているか
 
-## 現状と技術的負債
+## 適用状況
 
-Phase1 で先行実装した勤怠打刻 API は動詞ベースで、本方針に **未準拠**（要リファクタ）。
+Phase1 で先行実装した動詞ベースの勤怠打刻 API は、本方針に沿って **リソース中心へ移行済み**。
 
-- `POST /attendances/clock-in` / `clock-out` / `break-start` / `break-end`
+| 操作 | エンドポイント |
+|---|---|
+| 出勤 | `POST /attendances`（create） |
+| 退勤 | `PATCH /attendances/:id`（`{status:"finished"}`） |
+| 一覧 / 詳細 | `GET /attendances` / `GET /attendances/:id` |
+| 休憩開始 | `POST /attendances/:attendance_id/breaks`（create） |
+| 休憩終了 | `PATCH /attendances/:attendance_id/breaks/:id`（update） |
 
-→ リソース中心へ移行する計画: `docs/plans/controller-refactor.md`
+- 状態遷移ロジックは `Attendance` モデル（`clock_out!` / `start_break!` / `finish_break!`）に集約し、Controller は薄く保つ。
+- 不正な遷移は `Attendance::InvalidTransition` → 422、存在しない勤怠は 404。
+- 移行記録: `docs/plans/controller-refactor.md`（Issue #16）。

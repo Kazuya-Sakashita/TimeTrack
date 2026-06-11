@@ -127,14 +127,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /attendances/clock-in:
     post:
       tags: [Attendance]
-      summary: 出勤打刻
-      description: ログイン中ユーザーの本日の出勤を記録する（1日1回）。
+      summary: 出勤打刻（勤怠の作成）
+      description: ログイン中ユーザーの本日の勤怠を作成し、出勤時刻を記録する（1日1回）。
       responses:
         "201":
-          description: 出勤打刻成功
+          description: 作成成功
           content:
             application/json:
               schema:
@@ -152,14 +151,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /attendances/clock-out:
-    post:
+  /attendances/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 勤怠の public_id
+    get:
       tags: [Attendance]
-      summary: 退勤打刻
-      description: 本日の出勤中レコードを退勤済みにし、勤務時間を確定する。
+      summary: 勤怠詳細（自分）
       responses:
         "200":
-          description: 退勤打刻成功
+          description: 正常
           content:
             application/json:
               schema:
@@ -170,20 +175,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: 見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags: [Attendance]
+      summary: 勤怠の更新（退勤）
+      description: 勤怠の状態を更新する。退勤は status を finished にする（状態変更=update）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceUpdateRequest"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attendance"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "422":
-          description: 未出勤、または既に退勤済み
+          description: 不正な状態遷移（既に退勤済み等）
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /attendances/break-start:
+  /attendances/{attendanceId}/breaks:
+    parameters:
+      - name: attendanceId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 勤怠の public_id
     post:
       tags: [Attendance]
-      summary: 休憩開始
-      description: 勤務中のユーザーの休憩を開始する。
+      summary: 休憩開始（休憩の作成）
+      description: 勤怠に休憩を作成する。親勤怠の最新状態を返す。
       responses:
-        "200":
+        "201":
           description: 休憩開始成功
           content:
             application/json:
@@ -195,18 +242,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: 見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "422":
-          description: 未出勤 / 退勤済 / 既に休憩中
+          description: 退勤済 / 既に休憩中
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /attendances/break-end:
-    post:
+  /attendances/{attendanceId}/breaks/{id}:
+    parameters:
+      - name: attendanceId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 勤怠の public_id
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 休憩の public_id
+    patch:
       tags: [Attendance]
-      summary: 休憩終了
-      description: 休憩中のユーザーの休憩を終了する。
+      summary: 休憩終了（休憩の更新）
+      description: 休憩を終了する（ended_at をセット）。親勤怠の最新状態を返す。
       responses:
         "200":
           description: 休憩終了成功
@@ -220,8 +286,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: 見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "422":
-          description: 未出勤 / 休憩中でない
+          description: 休憩中でない
           content:
             application/json:
               schema:
@@ -314,10 +386,25 @@ components:
           type: integer
           description: 休憩時間の合計（分）
           example: 60
+        openBreakId:
+          type: string
+          nullable: true
+          description: 進行中（未終了）の休憩の public_id。休憩中でなければ null
+          example: brk_a1B2c3D4e5F6
         status:
           type: string
           enum: [working, on_break, finished]
           example: working
+
+    AttendanceUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [finished]
+          description: 遷移先の状態。退勤は finished
+          example: finished
 
     Pagination:
       type: object
