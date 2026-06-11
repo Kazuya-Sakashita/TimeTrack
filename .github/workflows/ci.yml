@@ -1,0 +1,82 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  backend-test:
+    name: backend (rspec)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: timetrack
+          POSTGRES_PASSWORD: timetrack_password
+          POSTGRES_DB: timetrack_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U timetrack"
+          --health-interval 5s --health-timeout 5s --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      POSTGRES_USER: timetrack
+      POSTGRES_PASSWORD: timetrack_password
+      POSTGRES_DB: timetrack_test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: backend
+          bundler-cache: true
+      - name: Prepare test DB
+        run: bin/rails db:test:prepare
+      - name: RSpec
+        run: bundle exec rspec
+
+  backend-lint:
+    name: backend (rubocop + security)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: backend
+          bundler-cache: true
+      - name: RuboCop
+        run: bundle exec rubocop -f github
+      - name: Brakeman (security)
+        run: bin/brakeman --no-pager -q
+      - name: bundler-audit
+        run: bin/bundler-audit check --update
+
+  frontend:
+    name: frontend (tsc + eslint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+      - name: ESLint
+        run: pnpm lint

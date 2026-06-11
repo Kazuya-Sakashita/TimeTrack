@@ -14,6 +14,6 @@ class CreateAttendances < ActiveRecord::Migration[8.1]
     end
 
     # 1人1日1レコード（二重出勤を防ぐ）
-    add_index :attendances, [:user_id, :work_date], unique: true
+    add_index :attendances, [ :user_id, :work_date ], unique: true
   end
 end

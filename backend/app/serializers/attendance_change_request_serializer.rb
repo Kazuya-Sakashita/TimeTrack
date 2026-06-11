@@ -11,7 +11,7 @@ class AttendanceChangeRequestSerializer
       status: request.status,
       reviewComment: request.review_comment,
       reviewedAt: request.reviewed_at&.iso8601,
-      createdAt: request.created_at.iso8601,
+      createdAt: request.created_at.iso8601
     }
   end
 end

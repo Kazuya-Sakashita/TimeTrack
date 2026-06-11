@@ -55,6 +55,6 @@ class Attendance < ApplicationRecord
     return nil unless clock_in_at && clock_out_at
 
     gross = ((clock_out_at - clock_in_at) / 60).floor
-    [gross - break_minutes, 0].max
+    [ gross - break_minutes, 0 ].max
   end
 end

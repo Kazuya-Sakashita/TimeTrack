@@ -30,7 +30,7 @@
 - [x] 0-F public_id の仕組み（PublicId 生成 + HasPublicId concern + PublicIdMigration ヘルパ + 単体テスト）
 - [x] 0-G テスト基盤（RSpec + FactoryBot + Pundit 導入、/health の Request Spec 緑）
 - [x] 0-H frontend: Next.js 16 生成 & 疎通（V0 準拠、API URL を env 化、確認ページで疎通 OK 表示）
-- [ ] 0-I（Could）CI 最小（GitHub Actions: rspec / lint）← 次スライス前に判断
+- [x] 0-I CI（GitHub Actions: backend rspec / rubocop+brakeman+bundler-audit / frontend tsc+eslint）+ dependabot
 
 ## 実装メモ（記事素材）
 

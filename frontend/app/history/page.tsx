@@ -24,7 +24,6 @@ export default function HistoryPage() {
         router.replace("/login");
         return;
       }
-      setLoading(true);
       fetchAttendances(token, p, PER_PAGE)
         .then(setData)
         .catch(() => {

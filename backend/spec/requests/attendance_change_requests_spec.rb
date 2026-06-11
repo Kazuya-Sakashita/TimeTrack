@@ -11,7 +11,7 @@ RSpec.describe "AttendanceChangeRequests", type: :request do
       {
         attendanceId: attendance.public_id,
         proposedClockInAt: "2026-06-12T09:00:00+09:00",
-        reason: "打刻し忘れたため",
+        reason: "打刻し忘れたため"
       }
     end
 

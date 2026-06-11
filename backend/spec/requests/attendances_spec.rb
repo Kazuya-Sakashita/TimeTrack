@@ -19,7 +19,7 @@ RSpec.describe "Attendances", type: :request do
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)
         expect(body["attendances"].size).to eq(2)
-        expect(body["attendances"].map { |a| a["workDate"] }).to eq(["2026-06-11", "2026-06-10"])
+        expect(body["attendances"].map { |a| a["workDate"] }).to eq([ "2026-06-11", "2026-06-10" ])
       end
 
       it "ページングする" do
