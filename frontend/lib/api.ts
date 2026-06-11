@@ -38,6 +38,7 @@ export type Attendance = {
   workDate: string;
   clockInAt: string | null;
   clockOutAt: string | null;
+  workMinutes: number | null;
   status: "working" | "finished";
 };
 
@@ -49,6 +50,18 @@ export async function clockIn(token: string): Promise<Attendance> {
   if (!res.ok) {
     const data = await res.json().catch(() => null);
     throw new Error(data?.error?.message ?? "出勤打刻に失敗しました");
+  }
+  return res.json();
+}
+
+export async function clockOut(token: string): Promise<Attendance> {
+  const res = await fetch(`${BASE}/attendances/clock-out`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "退勤打刻に失敗しました");
   }
   return res.json();
 }
