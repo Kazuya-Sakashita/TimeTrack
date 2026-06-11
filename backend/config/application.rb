@@ -33,7 +33,8 @@ module App
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # 日本時間で「本日」を判定する（DB は UTC 保存）
+    config.time_zone = "Asia/Tokyo"
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Only loads a smaller set of middleware suitable for API only apps.

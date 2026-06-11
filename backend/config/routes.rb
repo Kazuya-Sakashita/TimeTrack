@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   # ログイン中ユーザー
   get "me" => "me#show"
 
+  # 勤怠打刻
+  post "attendances/clock-in" => "attendances#clock_in"
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
