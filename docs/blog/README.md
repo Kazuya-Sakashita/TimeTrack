@@ -9,7 +9,8 @@ TimeTrack の開発を題材にした記事ドラフト置き場。方針は [`.
 - [03. API駆動開発の進め方 — OpenAPI を起点に1機能を縦に通す](03-api-driven-development.md)
 - [04. 内部IDを公開しない — public_id でリソースIDを設計する](04-public-id.md)
 - [05. Docker だけで Rails 8 + Next.js 16 を動かす開発環境](05-docker-dev-environment.md)
+- [06. GitHub Actions で rspec / lint / 機密スキャンを多層化する](06-github-actions-ci.md)
 
 ## 執筆予定（候補）
 
-- GitHub Actions で rspec / lint / gitleaks を多層化する
+- Phase3（月次集計・レポート）の設計
