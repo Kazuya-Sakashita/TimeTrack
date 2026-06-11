@@ -5,6 +5,44 @@ RSpec.describe "Attendances", type: :request do
   let(:token) { JsonWebToken.encode({ user_id: user.id }) }
   let(:auth_headers) { { "Authorization" => "Bearer #{token}" } }
 
+  describe "GET /attendances" do
+    context "認証済み" do
+      before do
+        create(:attendance, user: user, work_date: Date.new(2026, 6, 10))
+        create(:attendance, user: user, work_date: Date.new(2026, 6, 11))
+        # 別ユーザーの勤怠（一覧に含まれてはいけない）
+        create(:attendance, user: create(:user), work_date: Date.new(2026, 6, 11))
+      end
+
+      it "自分の勤怠のみを新しい日付順で返す" do
+        get "/attendances", headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["attendances"].size).to eq(2)
+        dates = body["attendances"].map { |a| a["workDate"] }
+        expect(dates).to eq(["2026-06-11", "2026-06-10"])
+      end
+
+      it "ページングする" do
+        get "/attendances", params: { page: 1, perPage: 1 }, headers: auth_headers
+
+        body = JSON.parse(response.body)
+        expect(body["attendances"].size).to eq(1)
+        expect(body["pagination"]).to include(
+          "page" => 1, "perPage" => 1, "total" => 2, "totalPages" => 2,
+        )
+      end
+    end
+
+    context "未認証" do
+      it "401 を返す" do
+        get "/attendances"
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
   describe "POST /attendances/clock-in" do
     context "認証済み・未打刻" do
       it "201 で出勤記録を返す" do
