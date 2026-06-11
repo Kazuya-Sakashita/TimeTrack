@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_000001) do
     t.datetime "updated_at", null: false
     t.index ["attendance_id"], name: "index_attendance_breaks_on_attendance_id"
     t.index ["public_id"], name: "index_attendance_breaks_on_public_id", unique: true
+  end
+
+  create_table "attendance_change_requests", force: :cascade do |t|
+    t.bigint "attendance_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "proposed_clock_in_at"
+    t.datetime "proposed_clock_out_at"
+    t.string "public_id", null: false
+    t.text "reason", null: false
+    t.text "review_comment"
+    t.datetime "reviewed_at"
+    t.bigint "reviewer_id"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["attendance_id"], name: "index_attendance_change_requests_on_attendance_id"
+    t.index ["public_id"], name: "index_attendance_change_requests_on_public_id", unique: true
+    t.index ["reviewer_id"], name: "index_attendance_change_requests_on_reviewer_id"
+    t.index ["user_id"], name: "index_attendance_change_requests_on_user_id"
   end
 
   create_table "attendances", force: :cascade do |t|
@@ -52,5 +71,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_000001) do
   end
 
   add_foreign_key "attendance_breaks", "attendances"
+  add_foreign_key "attendance_change_requests", "attendances"
+  add_foreign_key "attendance_change_requests", "users"
+  add_foreign_key "attendance_change_requests", "users", column: "reviewer_id"
   add_foreign_key "attendances", "users"
 end
