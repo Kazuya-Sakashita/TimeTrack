@@ -16,6 +16,23 @@ class AttendanceChangeRequestsController < ApplicationController
     render json: AttendanceChangeRequestSerializer.call(request)
   end
 
+  # PATCH /attendance_change_requests/:id （承認・却下＝状態更新）
+  def update
+    change_request = AttendanceChangeRequest.find_by!(public_id: params[:id])
+    authorize change_request
+
+    case params[:status]
+    when "approved"
+      change_request.approve!(reviewer: current_user, comment: params[:comment])
+    when "rejected"
+      change_request.reject!(reviewer: current_user, comment: params[:comment])
+    else
+      return render_error("unsupported_update", "status は approved / rejected のいずれかです")
+    end
+
+    render json: AttendanceChangeRequestSerializer.call(change_request)
+  end
+
   # POST /attendance_change_requests
   def create
     attendance = current_user.attendances.find_by!(public_id: params[:attendanceId])

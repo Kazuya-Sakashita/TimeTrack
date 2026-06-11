@@ -86,4 +86,68 @@ RSpec.describe "AttendanceChangeRequests", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
   end
+
+  describe "PATCH /attendance_change_requests/:id （承認・却下）" do
+    let(:admin) { create(:user, :admin) }
+    let(:admin_headers) { { "Authorization" => "Bearer #{JsonWebToken.encode({ user_id: admin.id })}" } }
+    let(:target_attendance) do
+      create(:attendance, user: user, work_date: Date.new(2026, 6, 12),
+             clock_in_at: Time.zone.local(2026, 6, 12, 9, 30))
+    end
+    let(:change_request) do
+      create(:attendance_change_request, user: user, attendance: target_attendance,
+             proposed_clock_in_at: Time.zone.local(2026, 6, 12, 9, 0))
+    end
+
+    context "承認者（admin）" do
+      it "承認すると 200・勤怠に反映される" do
+        patch "/attendance_change_requests/#{change_request.public_id}",
+              params: { status: "approved", comment: "確認しました" }, headers: admin_headers
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["status"]).to eq("approved")
+        expect(target_attendance.reload.clock_in_at).to eq(Time.zone.local(2026, 6, 12, 9, 0))
+      end
+
+      it "却下すると 200・勤怠は変わらない" do
+        patch "/attendance_change_requests/#{change_request.public_id}",
+              params: { status: "rejected" }, headers: admin_headers
+
+        expect(JSON.parse(response.body)["status"]).to eq("rejected")
+        expect(target_attendance.reload.clock_in_at).to eq(Time.zone.local(2026, 6, 12, 9, 30))
+      end
+
+      it "申請中以外は 422" do
+        change_request.update!(status: :approved)
+        patch "/attendance_change_requests/#{change_request.public_id}",
+              params: { status: "rejected" }, headers: admin_headers
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["error"]["code"]).to eq("not_pending")
+      end
+    end
+
+    context "権限なし" do
+      it "申請者本人（従業員）は 403" do
+        patch "/attendance_change_requests/#{change_request.public_id}",
+              params: { status: "approved" }, headers: auth_headers
+        expect(response).to have_http_status(:forbidden)
+      end
+
+      it "manager でも自分の申請は承認できず 403" do
+        manager = create(:user, :manager)
+        own = create(:attendance_change_request, user: manager)
+        headers = { "Authorization" => "Bearer #{JsonWebToken.encode({ user_id: manager.id })}" }
+
+        patch "/attendance_change_requests/#{own.public_id}",
+              params: { status: "approved" }, headers: headers
+        expect(response).to have_http_status(:forbidden)
+      end
+
+      it "未認証は 401" do
+        patch "/attendance_change_requests/#{change_request.public_id}", params: { status: "approved" }
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

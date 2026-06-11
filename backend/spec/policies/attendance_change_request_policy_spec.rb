@@ -20,6 +20,19 @@ RSpec.describe AttendanceChangeRequestPolicy do
     it "manager は閲覧できる" do
       expect(described_class.new(manager, request).show?).to be(true)
     end
+
+    it "manager は他人の申請を承認できる" do
+      expect(described_class.new(manager, request).update?).to be(true)
+    end
+
+    it "申請者本人は承認できない" do
+      expect(described_class.new(applicant, request).update?).to be(false)
+    end
+
+    it "manager でも自分の申請は承認できない" do
+      own = create(:attendance_change_request, user: manager)
+      expect(described_class.new(manager, own).update?).to be(false)
+    end
   end
 
   describe "Scope" do
