@@ -13,16 +13,6 @@ class Attendance < ApplicationRecord
                         uniqueness: { scope: :user_id, message: "は既に打刻済みです" }
   validates :clock_in_at, presence: true
 
-  # 不正な状態遷移を表すドメインエラー（Controller で 422 にマップ）
-  class InvalidTransition < StandardError
-    attr_reader :code
-
-    def initialize(code, message)
-      @code = code
-      super(message)
-    end
-  end
-
   # 退勤（状態変更）
   def clock_out!
     raise InvalidTransition.new("already_clocked_out", "本日は既に退勤打刻済みです") if finished?

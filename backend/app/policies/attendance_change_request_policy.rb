@@ -22,6 +22,11 @@ class AttendanceChangeRequestPolicy < ApplicationPolicy
     own? || reviewer?
   end
 
+  # 承認/却下は承認者のみ。申請者自身は承認できない。
+  def update?
+    reviewer? && !own?
+  end
+
   private
 
   def own?

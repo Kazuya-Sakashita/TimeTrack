@@ -7,7 +7,7 @@ class ApplicationController < ActionController::API
   # リソースが見つからなければ 404
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   # 不正な状態遷移は 422
-  rescue_from Attendance::InvalidTransition do |e|
+  rescue_from InvalidTransition do |e|
     render_error(e.code, e.message)
   end
 

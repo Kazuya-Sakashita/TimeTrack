@@ -183,6 +183,27 @@ export async function createChangeRequest(
   return res.json();
 }
 
+export async function reviewChangeRequest(
+  token: string,
+  id: string,
+  status: "approved" | "rejected",
+  comment?: string,
+): Promise<AttendanceChangeRequest> {
+  const res = await fetch(`${BASE}/attendance_change_requests/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status, comment }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "処理に失敗しました");
+  }
+  return res.json();
+}
+
 export async function logout(token: string): Promise<void> {
   await fetch(`${BASE}/auth/logout`, {
     method: "DELETE",

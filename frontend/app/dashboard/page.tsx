@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CalendarClock,
+  ClipboardCheck,
   Clock3,
   Coffee,
   FileText,
@@ -216,6 +217,15 @@ export default function DashboardPage() {
           <FileText className="size-4 text-muted-foreground" />
           修正申請
         </Link>
+        {user.role !== "employee" && (
+          <Link
+            href="/manager/requests"
+            className="col-span-2 flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent"
+          >
+            <ClipboardCheck className="size-4 text-muted-foreground" />
+            修正申請の承認（管理者）
+          </Link>
+        )}
       </div>
     </main>
   );

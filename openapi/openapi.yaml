@@ -387,6 +387,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    patch:
+      tags: [ChangeRequest]
+      summary: 修正申請の承認・却下
+      description: |
+        manager/admin が申請を承認/却下する（状態更新）。
+        承認時は対象勤怠に修正時刻を反映する。申請者自身は承認できない。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceChangeRequestUpdateRequest"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceChangeRequest"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 権限なし（承認者以外 / 自分の申請）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: 申請中以外は承認/却下できない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /me:
     get:
@@ -580,6 +623,19 @@ components:
           nullable: true
         reason:
           type: string
+
+    AttendanceChangeRequestUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+          description: 承認は approved、却下は rejected
+        comment:
+          type: string
+          nullable: true
+          description: 承認者コメント
 
     LoginRequest:
       type: object
