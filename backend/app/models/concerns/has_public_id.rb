@@ -9,7 +9,8 @@ module HasPublicId
   extend ActiveSupport::Concern
 
   included do
-    before_create :assign_public_id
+    # presence バリデーションより先に採番するため before_validation を使う
+    before_validation :assign_public_id, on: :create
     validates :public_id, presence: true, uniqueness: true
   end
 
