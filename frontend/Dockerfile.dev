@@ -1,0 +1,17 @@
+# 開発用 Dockerfile（Next.js / pnpm）
+FROM node:24-slim
+
+# corepack で pnpm を有効化（package.json の packageManager に追従）
+RUN corepack enable
+
+WORKDIR /app
+
+# 依存解決はコード bind mount の外（イメージ層）で行う。
+# node_modules は compose の匿名ボリュームでコンテナ側を保持する。
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+EXPOSE 3000
+CMD ["pnpm", "dev", "-H", "0.0.0.0"]
