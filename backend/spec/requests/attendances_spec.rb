@@ -43,4 +43,54 @@ RSpec.describe "Attendances", type: :request do
       end
     end
   end
+
+  describe "POST /attendances/clock-out" do
+    context "出勤中" do
+      before do
+        create(:attendance, user: user, work_date: Date.current,
+                            clock_in_at: 8.hours.ago, status: :working)
+      end
+
+      it "200 で退勤済み・勤務時間を返す" do
+        post "/attendances/clock-out", headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        body = JSON.parse(response.body)
+        expect(body["status"]).to eq("finished")
+        expect(body["clockOutAt"]).to be_present
+        expect(body["workMinutes"]).to be_within(2).of(480)
+      end
+    end
+
+    context "本日未出勤" do
+      it "422 を返す" do
+        post "/attendances/clock-out", headers: auth_headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["error"]["code"]).to eq("not_clocked_in")
+      end
+    end
+
+    context "既に退勤済み" do
+      before do
+        create(:attendance, user: user, work_date: Date.current,
+                            clock_in_at: 8.hours.ago, clock_out_at: 1.hour.ago,
+                            status: :finished)
+      end
+
+      it "422 を返す" do
+        post "/attendances/clock-out", headers: auth_headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["error"]["code"]).to eq("already_clocked_out")
+      end
+    end
+
+    context "未認証" do
+      it "401 を返す" do
+        post "/attendances/clock-out"
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

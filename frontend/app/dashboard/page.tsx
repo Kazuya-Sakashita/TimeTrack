@@ -3,7 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Clock3, LogIn, LogOut } from "lucide-react";
-import { type ApiUser, type Attendance, clockIn, fetchMe, logout } from "@/lib/api";
+import {
+  type ApiUser,
+  type Attendance,
+  clockIn,
+  clockOut,
+  fetchMe,
+  logout,
+} from "@/lib/api";
 import { tokenStore } from "@/lib/auth";
 
 function formatTime(iso: string | null): string {
@@ -12,6 +19,11 @@ function formatTime(iso: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatMinutes(min: number | null): string {
+  if (min == null) return "--";
+  return `${Math.floor(min / 60)}時間${min % 60}分`;
 }
 
 const roleLabel: Record<ApiUser["role"], string> = {
@@ -52,6 +64,20 @@ export default function DashboardPage() {
       setAttendance(await clockIn(token));
     } catch (err) {
       setClockError(err instanceof Error ? err.message : "出勤打刻に失敗しました");
+    } finally {
+      setClocking(false);
+    }
+  }
+
+  async function handleClockOut() {
+    const token = tokenStore.get();
+    if (!token) return;
+    setClocking(true);
+    setClockError(null);
+    try {
+      setAttendance(await clockOut(token));
+    } catch (err) {
+      setClockError(err instanceof Error ? err.message : "退勤打刻に失敗しました");
     } finally {
       setClocking(false);
     }
@@ -104,7 +130,7 @@ export default function DashboardPage() {
         </dl>
       </div>
 
-      {/* 出勤打刻（clock-widget の出勤部分。退勤・休憩は後続スライス） */}
+      {/* 打刻（clock-widget の出勤・退勤部分。休憩は後続スライス） */}
       <div className="rounded-lg border bg-card p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -112,24 +138,40 @@ export default function DashboardPage() {
             <p className="mt-1 flex items-center gap-2">
               <span
                 className={`inline-block size-2 rounded-full ${
-                  attendance ? "bg-success" : "bg-muted-foreground/40"
+                  attendance?.status === "working"
+                    ? "bg-success"
+                    : "bg-muted-foreground/40"
                 }`}
               />
               <span className="font-medium">
-                {attendance
-                  ? `勤務中 · ${formatTime(attendance.clockInAt)} 出勤`
-                  : "未出勤"}
+                {attendance?.status === "working" &&
+                  `勤務中 · ${formatTime(attendance.clockInAt)} 出勤`}
+                {attendance?.status === "finished" &&
+                  `退勤済 · 勤務 ${formatMinutes(attendance.workMinutes)}`}
+                {!attendance && "未出勤"}
               </span>
             </p>
           </div>
-          <button
-            onClick={handleClockIn}
-            disabled={clocking || !!attendance}
-            className="flex h-12 items-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
-          >
-            <LogIn className="size-4" />
-            {clocking ? "打刻中..." : "出勤"}
-          </button>
+
+          {attendance?.status === "working" ? (
+            <button
+              onClick={handleClockOut}
+              disabled={clocking}
+              className="flex h-12 items-center gap-2 rounded-md bg-destructive px-5 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-60"
+            >
+              <LogOut className="size-4" />
+              {clocking ? "打刻中..." : "退勤"}
+            </button>
+          ) : (
+            <button
+              onClick={handleClockIn}
+              disabled={clocking || attendance?.status === "finished"}
+              className="flex h-12 items-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+            >
+              <LogIn className="size-4" />
+              {clocking ? "打刻中..." : "出勤"}
+            </button>
+          )}
         </div>
         {clockError && (
           <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">

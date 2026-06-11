@@ -117,6 +117,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /attendances/clock-out:
+    post:
+      tags: [Attendance]
+      summary: 退勤打刻
+      description: 本日の出勤中レコードを退勤済みにし、勤務時間を確定する。
+      responses:
+        "200":
+          description: 退勤打刻成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attendance"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: 未出勤、または既に退勤済み
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /me:
     get:
       tags: [Me]
@@ -195,6 +220,11 @@ components:
           type: string
           format: date-time
           nullable: true
+        workMinutes:
+          type: integer
+          nullable: true
+          description: 勤務時間（分）。退勤前は null
+          example: 480
         status:
           type: string
           enum: [working, finished]

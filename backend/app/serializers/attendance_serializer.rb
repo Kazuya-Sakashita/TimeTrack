@@ -6,6 +6,7 @@ class AttendanceSerializer
       workDate: attendance.work_date.iso8601,
       clockInAt: attendance.clock_in_at&.iso8601,
       clockOutAt: attendance.clock_out_at&.iso8601,
+      workMinutes: attendance.worked_minutes,
       status: attendance.status,
     }
   end
