@@ -17,6 +17,7 @@ Rails.application.routes.draw do
 
   # 勤怠打刻
   post "attendances/clock-in" => "attendances#clock_in"
+  post "attendances/clock-out" => "attendances#clock_out"
 
   # Defines the root path route ("/")
   # root "posts#index"
