@@ -41,14 +41,20 @@ Phase1 の勤怠打刻 API は動詞ベースの独自アクションで、Contr
 
 ## タスク（OpenAPI → backend → spec → frontend → docs）
 
-- [ ] R-1 OpenAPI 改訂（clock-in/out, break-* を create/update/サブリソースへ）
-- [ ] R-2 routes を `resources` ベースへ（member/collection 不使用）
-- [ ] R-3 AttendancesController を create/update/show に再編（ロジックは Model/Service へ）
-- [ ] R-4 BreaksController を新設（create/update）+ BreakPolicy
-- [ ] R-5 状態遷移ロジックを Attendance/AttendanceBreak（または Service）へ移動
-- [ ] R-6 Request Spec を新エンドポイントに合わせ改訂
-- [ ] R-7 frontend lib/api.ts と dashboard を新契約に追従
-- [ ] R-8 README / docs / Issue の記述を更新
+- [x] R-1 OpenAPI 改訂（create/update/サブリソースへ）
+- [x] R-2 routes を `resources` ベースへ（member/collection 不使用）
+- [x] R-3 AttendancesController を index/show/create/update に再編
+- [x] R-4 BreaksController を新設（create/update）
+- [x] R-5 状態遷移ロジックを Attendance モデルへ移動（clock_out!/start_break!/finish_break!）
+- [x] R-6 Request Spec を新エンドポイントに合わせ改訂（attendances + breaks。計41 examples 緑）
+- [x] R-7 frontend lib/api.ts と dashboard を新契約に追従（tsc 緑）
+- [x] R-8 README / docs を更新（Issue #16）
+
+## 実装メモ（記事素材）
+
+- 認可は break も「親 attendance の update」とみなし `authorize attendance, :update?` に集約。
+- 休憩は親 Attendance の最新状態（`openBreakId` 含む）を返す方針で、フロントは Attendance 1 つを保持。
+- `not_clocked_in`（未出勤）は「存在しないリソースへの操作」となり 404 で自然に表現（旧 422 から変更）。
 
 ## 完了の定義（DoD）
 
