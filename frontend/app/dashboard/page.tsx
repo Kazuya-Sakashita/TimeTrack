@@ -2,9 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Clock3, LogOut } from "lucide-react";
-import { type ApiUser, fetchMe, logout } from "@/lib/api";
+import { Clock3, LogIn, LogOut } from "lucide-react";
+import { type ApiUser, type Attendance, clockIn, fetchMe, logout } from "@/lib/api";
 import { tokenStore } from "@/lib/auth";
+
+function formatTime(iso: string | null): string {
+  if (!iso) return "--:--";
+  return new Date(iso).toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 const roleLabel: Record<ApiUser["role"], string> = {
   employee: "従業員",
@@ -16,6 +24,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<ApiUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attendance, setAttendance] = useState<Attendance | null>(null);
+  const [clocking, setClocking] = useState(false);
+  const [clockError, setClockError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = tokenStore.get();
@@ -31,6 +42,20 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false));
   }, [router]);
+
+  async function handleClockIn() {
+    const token = tokenStore.get();
+    if (!token) return;
+    setClocking(true);
+    setClockError(null);
+    try {
+      setAttendance(await clockIn(token));
+    } catch (err) {
+      setClockError(err instanceof Error ? err.message : "出勤打刻に失敗しました");
+    } finally {
+      setClocking(false);
+    }
+  }
 
   async function handleLogout() {
     const token = tokenStore.get();
@@ -79,9 +104,39 @@ export default function DashboardPage() {
         </dl>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Slice 1（認証）完了。次は打刻機能（Slice 2）を実装します。
-      </p>
+      {/* 出勤打刻（clock-widget の出勤部分。退勤・休憩は後続スライス） */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">本日の勤怠</p>
+            <p className="mt-1 flex items-center gap-2">
+              <span
+                className={`inline-block size-2 rounded-full ${
+                  attendance ? "bg-success" : "bg-muted-foreground/40"
+                }`}
+              />
+              <span className="font-medium">
+                {attendance
+                  ? `勤務中 · ${formatTime(attendance.clockInAt)} 出勤`
+                  : "未出勤"}
+              </span>
+            </p>
+          </div>
+          <button
+            onClick={handleClockIn}
+            disabled={clocking || !!attendance}
+            className="flex h-12 items-center gap-2 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+          >
+            <LogIn className="size-4" />
+            {clocking ? "打刻中..." : "出勤"}
+          </button>
+        </div>
+        {clockError && (
+          <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {clockError}
+          </p>
+        )}
+      </div>
     </main>
   );
 }

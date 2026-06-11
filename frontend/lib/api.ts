@@ -33,6 +33,26 @@ export async function fetchMe(token: string): Promise<ApiUser> {
   return res.json();
 }
 
+export type Attendance = {
+  id: string;
+  workDate: string;
+  clockInAt: string | null;
+  clockOutAt: string | null;
+  status: "working" | "finished";
+};
+
+export async function clockIn(token: string): Promise<Attendance> {
+  const res = await fetch(`${BASE}/attendances/clock-in`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "出勤打刻に失敗しました");
+  }
+  return res.json();
+}
+
 export async function logout(token: string): Promise<void> {
   await fetch(`${BASE}/auth/logout`, {
     method: "DELETE",
