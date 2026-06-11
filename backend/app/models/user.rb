@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_secure_password
 
   has_many :attendances, dependent: :destroy
+  has_many :attendance_change_requests, dependent: :destroy
 
   # role はバックエンド内部では integer、API では文字列で扱う
   enum :role, { employee: 0, manager: 1, admin: 2 }
