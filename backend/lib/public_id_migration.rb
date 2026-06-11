@@ -9,8 +9,9 @@
 #   end
 # public_id は NOT NULL + 一意インデックス（database-policy.md）。
 #
-# NOTE: 生成ロジックの PublicId モジュール（app/models/concerns/public_id.rb）と
-# 定数が衝突しないよう、別名前空間 PublicIdMigration にしている。
+# NOTE: 生成ロジックの PublicId（app/models/concerns/public_id.rb）と
+# 定数衝突しないよう PublicIdMigration とし、Zeitwerk の命名規則に合わせて
+# ファイル名も public_id_migration.rb にしている。
 module PublicIdMigration
   # create_table のブロック内（t）でも、テーブル名指定でも使える
   def add_public_id(table_or_definition)
