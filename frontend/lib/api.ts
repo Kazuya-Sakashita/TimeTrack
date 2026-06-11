@@ -151,12 +151,25 @@ export type AttendanceChangeRequest = {
 
 export async function fetchChangeRequests(
   token: string,
+  status?: ChangeRequestStatus,
 ): Promise<AttendanceChangeRequest[]> {
-  const res = await fetch(`${BASE}/attendance_change_requests`, {
+  const query = status ? `?status=${status}` : "";
+  const res = await fetch(`${BASE}/attendance_change_requests${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("申請の取得に失敗しました");
   return res.json();
+}
+
+export async function deleteChangeRequest(token: string, id: string): Promise<void> {
+  const res = await fetch(`${BASE}/attendance_change_requests/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "取消に失敗しました");
+  }
 }
 
 export async function createChangeRequest(

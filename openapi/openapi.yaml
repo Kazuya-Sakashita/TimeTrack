@@ -306,6 +306,14 @@ paths:
       tags: [ChangeRequest]
       summary: 修正申請の一覧
       description: 従業員は自分の申請、manager/admin は全件を返す（policy_scope）。
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+          description: 指定すると該当 status のみに絞り込む
       responses:
         "200":
           description: 正常
@@ -426,6 +434,31 @@ paths:
                 $ref: "#/components/schemas/Error"
         "422":
           description: 申請中以外は承認/却下できない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [ChangeRequest]
+      summary: 修正申請の取消
+      description: 申請者本人が、申請中（pending）の自分の申請を取り消す。
+      responses:
+        "204":
+          description: 取消成功
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: 権限なし（他人の申請 / 申請中でない）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 見つからない
           content:
             application/json:
               schema:

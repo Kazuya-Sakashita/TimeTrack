@@ -41,7 +41,11 @@
   - 承認時に対象 `Attendance` の時刻を反映（Service で適用・勤務時間再計算）
   - ロール認可: manager/admin のみ承認可・申請者は自分の申請を承認不可、Scope で manager/admin は全件
   - 管理者 UI: 申請一覧 + 承認/却下（コメント）
-- **Slice 8（Should/Could）— 取消・絞り込み・種別拡張**（任意）
+- **Slice 8（Should/Could）— 取消・絞り込み**（実装済み）
+  - 取消: `DELETE /attendance_change_requests/:id`（Policy `destroy?` = 自分 かつ pending のみ）
+  - 絞り込み: `GET /attendance_change_requests?status=pending`
+  - frontend: /requests に取消ボタン、/manager/requests に「申請中のみ/すべて」フィルタ
+  - 種別拡張（残業・休暇）/ Attendance 無しの日の申請は Won't（別スライス化）
 
 ## 優先順位（RICE）
 
