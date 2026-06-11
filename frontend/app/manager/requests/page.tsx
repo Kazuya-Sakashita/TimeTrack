@@ -21,6 +21,7 @@ export default function ManagerRequestsPage() {
   const [comments, setComments] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [onlyPending, setOnlyPending] = useState(true);
 
   const load = useCallback(() => {
     const token = tokenStore.get();
@@ -28,14 +29,14 @@ export default function ManagerRequestsPage() {
       router.replace("/login");
       return;
     }
-    fetchChangeRequests(token)
+    fetchChangeRequests(token, onlyPending ? "pending" : undefined)
       .then(setRequests)
       .catch(() => {
         tokenStore.clear();
         router.replace("/login");
       })
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [router, onlyPending]);
 
   useEffect(() => {
     // 承認権限の確認（manager/admin 以外はダッシュボードへ）
@@ -85,6 +86,21 @@ export default function ManagerRequestsPage() {
         </Link>
         <h1 className="text-xl font-semibold">修正申請の承認</h1>
       </header>
+
+      <div className="flex gap-2 text-sm">
+        <button
+          onClick={() => setOnlyPending(true)}
+          className={`rounded-md px-3 py-1.5 ${onlyPending ? "bg-primary text-primary-foreground" : "border border-input hover:bg-accent"}`}
+        >
+          申請中のみ
+        </button>
+        <button
+          onClick={() => setOnlyPending(false)}
+          className={`rounded-md px-3 py-1.5 ${!onlyPending ? "bg-primary text-primary-foreground" : "border border-input hover:bg-accent"}`}
+        >
+          すべて
+        </button>
+      </div>
 
       {error && (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">

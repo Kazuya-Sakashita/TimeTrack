@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
-import { type AttendanceChangeRequest, fetchChangeRequests } from "@/lib/api";
+import { ArrowLeft, Plus, X } from "lucide-react";
+import {
+  type AttendanceChangeRequest,
+  deleteChangeRequest,
+  fetchChangeRequests,
+} from "@/lib/api";
 import { tokenStore } from "@/lib/auth";
 import { RequestStatusBadge } from "@/components/status-badge";
 import { formatTime } from "@/lib/format";
@@ -13,8 +17,9 @@ export default function RequestsPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<AttendanceChangeRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     const token = tokenStore.get();
     if (!token) {
       router.replace("/login");
@@ -27,7 +32,21 @@ export default function RequestsPage() {
         router.replace("/login");
       })
       .finally(() => setLoading(false));
-  }, [router]);
+  }
+
+  useEffect(load, [router]);
+
+  async function withdraw(id: string) {
+    const token = tokenStore.get();
+    if (!token) return;
+    setBusyId(id);
+    try {
+      await deleteChangeRequest(token, id);
+      load();
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   return (
     <main className="mx-auto flex min-h-svh max-w-2xl flex-col gap-6 p-6">
@@ -81,6 +100,16 @@ export default function RequestsPage() {
                   </>
                 )}
               </dl>
+              {r.status === "pending" && (
+                <button
+                  onClick={() => withdraw(r.id)}
+                  disabled={busyId === r.id}
+                  className="mt-3 flex items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-60"
+                >
+                  <X className="size-4" />
+                  取消
+                </button>
+              )}
             </li>
           ))}
         </ul>
