@@ -40,6 +40,7 @@ export type Attendance = {
   clockOutAt: string | null;
   workMinutes: number | null;
   breakMinutes: number;
+  openBreakId: string | null;
   status: "working" | "on_break" | "finished";
 };
 
@@ -68,38 +69,21 @@ export async function fetchAttendances(
   return res.json();
 }
 
-export async function clockIn(token: string): Promise<Attendance> {
-  const res = await fetch(`${BASE}/attendances/clock-in`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new Error(data?.error?.message ?? "出勤打刻に失敗しました");
-  }
-  return res.json();
-}
-
-export async function clockOut(token: string): Promise<Attendance> {
-  const res = await fetch(`${BASE}/attendances/clock-out`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new Error(data?.error?.message ?? "退勤打刻に失敗しました");
-  }
-  return res.json();
-}
-
-async function postAttendanceAction(
+// 勤怠系の共通リクエスト。リソース中心の契約に対応する。
+async function attendanceRequest(
   token: string,
+  method: "POST" | "PATCH",
   path: string,
   fallbackMessage: string,
+  body?: unknown,
 ): Promise<Attendance> {
-  const res = await fetch(`${BASE}/attendances/${path}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
     const data = await res.json().catch(() => null);
@@ -108,12 +92,44 @@ async function postAttendanceAction(
   return res.json();
 }
 
-export function breakStart(token: string): Promise<Attendance> {
-  return postAttendanceAction(token, "break-start", "休憩開始に失敗しました");
+// 出勤 = 勤怠の作成
+export function clockIn(token: string): Promise<Attendance> {
+  return attendanceRequest(token, "POST", "/attendances", "出勤打刻に失敗しました");
 }
 
-export function breakEnd(token: string): Promise<Attendance> {
-  return postAttendanceAction(token, "break-end", "休憩終了に失敗しました");
+// 退勤 = 勤怠の状態更新
+export function clockOut(token: string, attendanceId: string): Promise<Attendance> {
+  return attendanceRequest(
+    token,
+    "PATCH",
+    `/attendances/${attendanceId}`,
+    "退勤打刻に失敗しました",
+    { status: "finished" },
+  );
+}
+
+// 休憩開始 = breaks の作成
+export function breakStart(token: string, attendanceId: string): Promise<Attendance> {
+  return attendanceRequest(
+    token,
+    "POST",
+    `/attendances/${attendanceId}/breaks`,
+    "休憩開始に失敗しました",
+  );
+}
+
+// 休憩終了 = breaks の更新
+export function breakEnd(
+  token: string,
+  attendanceId: string,
+  breakId: string,
+): Promise<Attendance> {
+  return attendanceRequest(
+    token,
+    "PATCH",
+    `/attendances/${attendanceId}/breaks/${breakId}`,
+    "休憩終了に失敗しました",
+  );
 }
 
 export async function logout(token: string): Promise<void> {
