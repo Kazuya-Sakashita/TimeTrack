@@ -53,6 +53,24 @@ TimeTrack は従業員の出退勤を管理する Web アプリケーション�
 
 ---
 
+### API 設計方針（リソース中心）
+
+新しい API は **リソース中心**で設計する。動詞ベース API（approve / reject / submit / join / leave / clock_in 等）は避け、次で表現する。
+
+```text
+PATCH  /attendance_change_requests/:id   # approve/reject → 状態更新
+POST   /memberships                      # join → 作成
+DELETE /memberships/:id                  # leave → 削除
+PATCH  /monthly_reports/:id              # finalize → 状態更新
+```
+
+新規 API 追加時は次の順で検討する（詳細: `docs/backend-controller-design.md`）。
+
+1. 既存の REST アクションで表現できるか
+2. 別リソースとして切り出せるか
+3. 状態変更として update で表現できるか
+4. それでも難しい場合のみ独自アクションを検討する（理由を明記）
+
 ## 5. OpenAPI 更新ルール
 
 - 仕様ファイルは `openapi/openapi.yaml`（将来作成）。
@@ -67,6 +85,8 @@ TimeTrack は従業員の出退勤を管理する Web アプリケーション�
 
 - **API Mode** を前提とする（ビューは持たない）。
 - Controller は薄く保ち、ロジックは Model / Service に寄せる。
+- **リソース中心（RESTful）設計**: Controller は標準アクション（index/show/create/update/destroy）を優先し、動詞ベースの独自アクションを原則追加しない。状態変更は `update`、独立した振る舞いは別リソースに切り出す。詳細は `docs/backend-controller-design.md`。
+- ルーティングは `resources` + `only:` を基本とし、`member`/`collection` を安易に使わない。
 - 認可は **Pundit の Policy** に集約し、Controller では `authorize` を呼ぶだけにする。
 - 外部公開するレスポンスは Serializer（または同等の整形層）を通し、内部 ID を漏らさない。
 - N+1 を避ける（`includes` / `preload`）。
@@ -146,6 +166,7 @@ TimeTrack は従業員の出退勤を管理する Web アプリケーション�
 4. public_id を使うべき箇所で内部 ID を使っていないか？
 5. テスト（特に Request Spec）の方針は決まっているか？
 6. 作業粒度は「1 記事」にできるくらい小さいか？
+7. その API はリソース中心で表現できているか？（動詞アクションを避ける。`docs/backend-controller-design.md` の検討順）
 
 ---
 
@@ -155,6 +176,7 @@ TimeTrack は従業員の出退勤を管理する Web アプリケーション�
 - 内部 ID（連番）を URL / レスポンスに公開すること。
 - 認可ロジックを Controller やフロントに散らすこと。
 - 巨大な PR / 一度に複数機能の実装。
+- 動詞ベースの独自アクション / 不要な `member`・`collection` ルートを安易に追加すること（→ `docs/backend-controller-design.md`）。
 - 不明点を推測で埋めて実装を進めること。
 - テストなしで API を「完了」とすること。
 - 秘密情報（鍵・トークン）をコードにハードコードすること。

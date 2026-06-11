@@ -44,6 +44,7 @@ Next.js (Frontend)  ──OpenAPI──▶  Ruby on Rails (API)  ──▶  Post
 
 - `development-policy.md` — 全体の開発方針と進め方
 - `api-driven-development.md` — API 駆動開発の具体フロー
+- `backend-controller-design.md` — Controller / API のリソース中心設計方針
 - `database-policy.md` — DB 設計と public_id
 - `security-policy.md` — 認証・認可
 - `testing-policy.md` — テスト戦略

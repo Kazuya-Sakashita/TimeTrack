@@ -136,6 +136,18 @@ openapi/
 6. E2E確認
    ```
 
+### API / Controller 設計方針（リソース中心）
+
+API は**リソース中心（RESTful）**で設計します。動詞ベースの独自アクション（approve / clock_in など）は避け、標準アクションで表現します。
+
+```text
+作成        POST   /resources
+状態変更    PATCH  /resources/:id
+別の振る舞い 別リソースに切り出す（例: 休憩 = /attendances/:id/breaks）
+```
+
+詳細・判断基準は [`docs/backend-controller-design.md`](docs/backend-controller-design.md) を参照。
+
 ---
 
 ## 🔒 セキュリティ
