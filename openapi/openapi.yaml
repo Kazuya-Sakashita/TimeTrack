@@ -92,6 +92,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /attendances:
+    get:
+      tags: [Attendance]
+      summary: 勤怠一覧（自分）
+      description: ログイン中ユーザー自身の勤怠を新しい日付順で返す（ページング）。
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: 正常
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceList"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /attendances/clock-in:
     post:
       tags: [Attendance]
@@ -229,6 +264,34 @@ components:
           type: string
           enum: [working, finished]
           example: working
+
+    Pagination:
+      type: object
+      required: [page, perPage, total, totalPages]
+      properties:
+        page:
+          type: integer
+          example: 1
+        perPage:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 3
+
+    AttendanceList:
+      type: object
+      required: [attendances, pagination]
+      properties:
+        attendances:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attendance"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
 
     LoginRequest:
       type: object

@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Clock3, LogIn, LogOut } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, Clock3, LogIn, LogOut } from "lucide-react";
 import {
   type ApiUser,
   type Attendance,
@@ -12,19 +13,7 @@ import {
   logout,
 } from "@/lib/api";
 import { tokenStore } from "@/lib/auth";
-
-function formatTime(iso: string | null): string {
-  if (!iso) return "--:--";
-  return new Date(iso).toLocaleTimeString("ja-JP", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatMinutes(min: number | null): string {
-  if (min == null) return "--";
-  return `${Math.floor(min / 60)}時間${min % 60}分`;
-}
+import { formatMinutes, formatTime } from "@/lib/format";
 
 const roleLabel: Record<ApiUser["role"], string> = {
   employee: "従業員",
@@ -179,6 +168,14 @@ export default function DashboardPage() {
           </p>
         )}
       </div>
+
+      <Link
+        href="/history"
+        className="flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent"
+      >
+        <CalendarClock className="size-4 text-muted-foreground" />
+        勤怠履歴を見る
+      </Link>
     </main>
   );
 }

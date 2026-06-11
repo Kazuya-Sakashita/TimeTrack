@@ -1,6 +1,26 @@
 class AttendancesController < ApplicationController
   before_action :authenticate_request
 
+  # GET /attendances
+  def index
+    scope = policy_scope(Attendance).order(work_date: :desc)
+
+    page = [params.fetch(:page, 1).to_i, 1].max
+    per_page = params.fetch(:perPage, 20).to_i.clamp(1, 100)
+    total = scope.count
+    records = scope.offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      attendances: records.map { |a| AttendanceSerializer.call(a) },
+      pagination: {
+        page:,
+        perPage: per_page,
+        total:,
+        totalPages: (total.to_f / per_page).ceil,
+      },
+    }
+  end
+
   # POST /attendances/clock-in
   def clock_in
     if current_user.attendances.exists?(work_date: Date.current)

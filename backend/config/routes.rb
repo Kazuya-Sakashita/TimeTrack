@@ -15,7 +15,8 @@ Rails.application.routes.draw do
   # ログイン中ユーザー
   get "me" => "me#show"
 
-  # 勤怠打刻
+  # 勤怠
+  get "attendances" => "attendances#index"
   post "attendances/clock-in" => "attendances#clock_in"
   post "attendances/clock-out" => "attendances#clock_out"
 
