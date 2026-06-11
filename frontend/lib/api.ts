@@ -42,6 +42,31 @@ export type Attendance = {
   status: "working" | "finished";
 };
 
+export type Pagination = {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+};
+
+export type AttendanceList = {
+  attendances: Attendance[];
+  pagination: Pagination;
+};
+
+export async function fetchAttendances(
+  token: string,
+  page = 1,
+  perPage = 20,
+): Promise<AttendanceList> {
+  const res = await fetch(
+    `${BASE}/attendances?page=${page}&perPage=${perPage}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!res.ok) throw new Error("勤怠の取得に失敗しました");
+  return res.json();
+}
+
 export async function clockIn(token: string): Promise<Attendance> {
   const res = await fetch(`${BASE}/attendances/clock-in`, {
     method: "POST",
