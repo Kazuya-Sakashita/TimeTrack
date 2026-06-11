@@ -131,4 +131,75 @@ RSpec.describe "Attendances", type: :request do
       end
     end
   end
+
+  describe "POST /attendances/break-start" do
+    context "勤務中" do
+      before { create(:attendance, user: user, work_date: Date.current, status: :working) }
+
+      it "200 で休憩中になる" do
+        post "/attendances/break-start", headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)["status"]).to eq("on_break")
+        expect(user.attendances.first.attendance_breaks.open.count).to eq(1)
+      end
+    end
+
+    context "本日未出勤" do
+      it "422 not_clocked_in" do
+        post "/attendances/break-start", headers: auth_headers
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)["error"]["code"]).to eq("not_clocked_in")
+      end
+    end
+
+    context "既に休憩中" do
+      before { create(:attendance, user: user, work_date: Date.current, status: :on_break) }
+
+      it "422 already_on_break" do
+        post "/attendances/break-start", headers: auth_headers
+        expect(JSON.parse(response.body)["error"]["code"]).to eq("already_on_break")
+      end
+    end
+
+    context "未認証" do
+      it "401" do
+        post "/attendances/break-start"
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "POST /attendances/break-end" do
+    context "休憩中" do
+      let!(:attendance) do
+        create(:attendance, user: user, work_date: Date.current, status: :on_break)
+      end
+      before { create(:attendance_break, attendance: attendance, started_at: 10.minutes.ago) }
+
+      it "200 で勤務中に戻り休憩が終了する" do
+        post "/attendances/break-end", headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)["status"]).to eq("working")
+        expect(attendance.attendance_breaks.open.count).to eq(0)
+      end
+    end
+
+    context "休憩中でない" do
+      before { create(:attendance, user: user, work_date: Date.current, status: :working) }
+
+      it "422 not_on_break" do
+        post "/attendances/break-end", headers: auth_headers
+        expect(JSON.parse(response.body)["error"]["code"]).to eq("not_on_break")
+      end
+    end
+
+    context "未認証" do
+      it "401" do
+        post "/attendances/break-end"
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

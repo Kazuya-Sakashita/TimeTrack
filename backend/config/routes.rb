@@ -19,6 +19,8 @@ Rails.application.routes.draw do
   get "attendances" => "attendances#index"
   post "attendances/clock-in" => "attendances#clock_in"
   post "attendances/clock-out" => "attendances#clock_out"
+  post "attendances/break-start" => "attendances#break_start"
+  post "attendances/break-end" => "attendances#break_end"
 
   # Defines the root path route ("/")
   # root "posts#index"
