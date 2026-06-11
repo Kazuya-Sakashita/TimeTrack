@@ -20,8 +20,8 @@ Rails.application.routes.draw do
     resources :breaks, only: %i[create update]
   end
 
-  # 勤怠修正申請（承認/却下＝update）
-  resources :attendance_change_requests, only: %i[index show create update]
+  # 勤怠修正申請（承認/却下＝update、取消＝destroy）
+  resources :attendance_change_requests, only: %i[index show create update destroy]
 
   # Defines the root path route ("/")
   # root "posts#index"

@@ -1,11 +1,12 @@
 class AttendanceChangeRequestsController < ApplicationController
   before_action :authenticate_request
 
-  # GET /attendance_change_requests
+  # GET /attendance_change_requests （?status= で絞り込み可）
   def index
     requests = policy_scope(AttendanceChangeRequest)
                .includes(:user, :attendance)
                .order(created_at: :desc)
+    requests = requests.where(status: params[:status]) if AttendanceChangeRequest.statuses.key?(params[:status])
     render json: requests.map { |r| AttendanceChangeRequestSerializer.call(r) }
   end
 
@@ -31,6 +32,14 @@ class AttendanceChangeRequestsController < ApplicationController
     end
 
     render json: AttendanceChangeRequestSerializer.call(change_request)
+  end
+
+  # DELETE /attendance_change_requests/:id （申請者による取消）
+  def destroy
+    change_request = AttendanceChangeRequest.find_by!(public_id: params[:id])
+    authorize change_request
+    change_request.destroy!
+    head :no_content
   end
 
   # POST /attendance_change_requests

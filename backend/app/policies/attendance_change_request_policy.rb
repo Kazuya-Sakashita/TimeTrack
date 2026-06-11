@@ -27,6 +27,11 @@ class AttendanceChangeRequestPolicy < ApplicationPolicy
     reviewer? && !own?
   end
 
+  # 取消は申請者本人かつ申請中のみ
+  def destroy?
+    own? && record.pending?
+  end
+
   private
 
   def own?

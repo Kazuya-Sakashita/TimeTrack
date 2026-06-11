@@ -33,6 +33,19 @@ RSpec.describe AttendanceChangeRequestPolicy do
       own = create(:attendance_change_request, user: manager)
       expect(described_class.new(manager, own).update?).to be(false)
     end
+
+    it "申請者は申請中の自分の申請を取り消せる" do
+      expect(described_class.new(applicant, request).destroy?).to be(true)
+    end
+
+    it "申請中でなければ取り消せない" do
+      approved = create(:attendance_change_request, user: applicant, status: :approved)
+      expect(described_class.new(applicant, approved).destroy?).to be(false)
+    end
+
+    it "他人は取り消せない" do
+      expect(described_class.new(other, request).destroy?).to be(false)
+    end
   end
 
   describe "Scope" do

@@ -71,6 +71,19 @@ RSpec.describe "AttendanceChangeRequests", type: :request do
 
       expect(JSON.parse(response.body).size).to eq(2)
     end
+
+    it "status で絞り込める" do
+      a1 = create(:attendance, user: user, work_date: Date.new(2026, 6, 1))
+      a2 = create(:attendance, user: user, work_date: Date.new(2026, 6, 2))
+      create(:attendance_change_request, user: user, attendance: a1, status: :pending)
+      create(:attendance_change_request, user: user, attendance: a2, status: :approved)
+
+      get "/attendance_change_requests", params: { status: "pending" }, headers: auth_headers
+
+      body = JSON.parse(response.body)
+      expect(body.size).to eq(1)
+      expect(body.first["status"]).to eq("pending")
+    end
   end
 
   describe "GET /attendance_change_requests/:id" do
@@ -148,6 +161,35 @@ RSpec.describe "AttendanceChangeRequests", type: :request do
         patch "/attendance_change_requests/#{change_request.public_id}", params: { status: "approved" }
         expect(response).to have_http_status(:unauthorized)
       end
+    end
+  end
+
+  describe "DELETE /attendance_change_requests/:id （取消）" do
+    it "申請者本人が申請中の申請を取り消せる（204）" do
+      req = create(:attendance_change_request, user: user, status: :pending)
+
+      expect {
+        delete "/attendance_change_requests/#{req.public_id}", headers: auth_headers
+      }.to change(AttendanceChangeRequest, :count).by(-1)
+      expect(response).to have_http_status(:no_content)
+    end
+
+    it "申請中以外は取り消せず 403" do
+      req = create(:attendance_change_request, user: user, status: :approved)
+      delete "/attendance_change_requests/#{req.public_id}", headers: auth_headers
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "他人の申請は取り消せず 403" do
+      req = create(:attendance_change_request, user: create(:user), status: :pending)
+      delete "/attendance_change_requests/#{req.public_id}", headers: auth_headers
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "未認証は 401" do
+      req = create(:attendance_change_request, user: user)
+      delete "/attendance_change_requests/#{req.public_id}"
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 end
