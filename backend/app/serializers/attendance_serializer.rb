@@ -9,7 +9,7 @@ class AttendanceSerializer
       workMinutes: attendance.worked_minutes,
       breakMinutes: attendance.break_minutes,
       openBreakId: attendance.open_break&.public_id,
-      status: attendance.status,
+      status: attendance.status
     }
   end
 end

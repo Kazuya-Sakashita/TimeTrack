@@ -7,7 +7,7 @@
 [
   { email: "admin@example.com", name: "管理 太郎", role: :admin },
   { email: "manager@example.com", name: "主任 花子", role: :manager },
-  { email: "employee@example.com", name: "社員 次郎", role: :employee },
+  { email: "employee@example.com", name: "社員 次郎", role: :employee }
 ].each do |attrs|
   user = User.find_or_initialize_by(email: attrs[:email])
   user.assign_attributes(name: attrs[:name], role: attrs[:role], password: "password")
