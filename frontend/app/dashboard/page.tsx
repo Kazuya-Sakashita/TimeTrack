@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  BarChart3,
   CalendarClock,
   ClipboardCheck,
   Clock3,
@@ -216,6 +217,13 @@ export default function DashboardPage() {
         >
           <FileText className="size-4 text-muted-foreground" />
           修正申請
+        </Link>
+        <Link
+          href="/reports"
+          className="flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-medium hover:bg-accent"
+        >
+          <BarChart3 className="size-4 text-muted-foreground" />
+          月次サマリー
         </Link>
         {user.role !== "employee" && (
           <Link

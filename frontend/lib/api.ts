@@ -217,6 +217,39 @@ export async function reviewChangeRequest(
   return res.json();
 }
 
+// ---- 月次集計 -----------------------------------------------------------
+
+export type MonthlyReportDay = {
+  date: string;
+  workMinutes: number | null;
+  breakMinutes: number;
+  overtimeMinutes: number;
+  status: "working" | "on_break" | "finished";
+};
+
+export type MonthlyReport = {
+  month: string;
+  workingDays: number;
+  totalWorkMinutes: number;
+  totalBreakMinutes: number;
+  overtimeMinutes: number;
+  days: MonthlyReportDay[];
+};
+
+export async function fetchMonthlyReport(
+  token: string,
+  month: string,
+): Promise<MonthlyReport> {
+  const res = await fetch(`${BASE}/monthly_reports/${month}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error?.message ?? "月次集計の取得に失敗しました");
+  }
+  return res.json();
+}
+
 export async function logout(token: string): Promise<void> {
   await fetch(`${BASE}/auth/logout`, {
     method: "DELETE",
