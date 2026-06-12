@@ -23,6 +23,9 @@ Rails.application.routes.draw do
   # 勤怠修正申請（承認/却下＝update、取消＝destroy）
   resources :attendance_change_requests, only: %i[index show create update destroy]
 
+  # 月次集計（読み取り専用。show は :month=YYYY-MM、形式検証は controller で）
+  resources :monthly_reports, only: %i[show], param: :month
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
