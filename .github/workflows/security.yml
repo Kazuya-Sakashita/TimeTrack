@@ -11,7 +11,7 @@ jobs:
     name: gitleaks (secret scan)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # 履歴全体を走査するため全コミットを取得
           fetch-depth: 0
